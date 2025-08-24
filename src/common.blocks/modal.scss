@@ -3,7 +3,7 @@
 
 .modal {
   @include mixins.sublayer;
-  // height: max-content;
+  inset: 0;
   position: absolute;
   display: none;
   justify-content: center;
@@ -12,6 +12,10 @@
   padding-top: 5vh;
   padding-bottom: 5vh;
   box-sizing: border-box;
+
+  &:has(.card_full), &:has(.order-success) {
+      align-items: center;
+  }
 
   &_active {
     display: flex;
@@ -22,7 +26,6 @@
     @include mixins.flex(column);
     gap: $defaultPadding;
     background-color: $background;
-    // min-height: 90vmin;
     border-radius: 3rem;
     box-sizing: border-box;
     position: relative;
