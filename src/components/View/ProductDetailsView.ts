@@ -1,4 +1,4 @@
-import { ProductView } from "components/View/ProductView";
+import { ProductView } from "components/view/ProductView";
 import { IActions, IProductItem } from "types";
 import { IEvents } from "components/base/events";
 import { formatPrice } from "utils/formatters";
@@ -41,7 +41,7 @@ export class ProductDetailsView extends ProductView {
   }
 
   /** Заполняет карточку товара деталями и возвращает готовый элемент карточки */
-  render(product: IProductItem, cartItems: IProductItem[] = []): HTMLElement {
+  render(product: IProductItem, inCart: boolean = false): HTMLElement {
     this.textEl.textContent = product.description;
     this.setProductCategory(product.category);
     this.productTitle.textContent = product.title;
@@ -49,7 +49,7 @@ export class ProductDetailsView extends ProductView {
     this.productImage.alt = product.title;
     this.productPrice.textContent = formatPrice(product.price);
 
-    const inCart = cartItems.some(item => item.id === product.id);
+
     this.updateButtonState(product, inCart);
 
     return this.productEl;

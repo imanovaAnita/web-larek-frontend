@@ -11,18 +11,19 @@ import { ensureElement } from 'utils/utils';
 
 import { IProductItem, IUpdateFieldEvent } from 'types';
 
-import { ProductView } from 'components/View/ProductView';
-import { ProductDetailsView } from 'components/View/ProductDetailsView';
-import { CartView } from 'components/View/CartView';
-import { CartItemView } from 'components/View/CartItemView';
-import { ModalView } from 'components/View/ModalView';
-import { OrderView } from 'components/View/OrderView';
-import { ContactsView } from 'components/View/ContactsView';
-import { SuccessView } from 'components/View/SuccessView';
+import { ProductView } from 'components/view/ProductView';
+import { ProductDetailsView } from 'components/view/ProductDetailsView';
+import { CartView } from 'components/view/CartView';
+import { CartItemView } from 'components/view/CartItemView';
+import { ModalView } from 'components/view/ModalView';
+import { OrderView } from 'components/view/OrderView';
+import { ContactsView } from 'components/view/ContactsView';
+import { SuccessView } from 'components/view/SuccessView';
+import { MainView } from 'components/view/MainView';
 
-const cardCatalogTemplate = document.querySelector('#card-catalog') as HTMLTemplateElement;
+const productTemplate = document.querySelector('#card-catalog') as HTMLTemplateElement;
 const productDetailsTemplate = document.querySelector('#card-preview') as HTMLTemplateElement;
-const productTemplate = document.querySelector('#basket') as HTMLTemplateElement;
+const cartTemplate = document.querySelector('#basket') as HTMLTemplateElement;
 const cartItemTemplate = document.querySelector('#card-basket') as HTMLTemplateElement;
 const orderTemplate = document.querySelector('#order') as HTMLTemplateElement;
 const contactsTemplate = document.querySelector('#contacts') as HTMLTemplateElement;
@@ -37,11 +38,11 @@ const cartModel = new CartModel();
 const checkoutModel = new CheckoutModel(events);
 
 // Views
-const cartView = new CartView(productTemplate, events);
+const mainView = new MainView(events);
+const cartView = new CartView(cartTemplate, events);
 const modalView = new ModalView(ensureElement<HTMLElement>('#modal-container'), events);
 const orderView = new OrderView(orderTemplate, events);
 const contactsView = new ContactsView(contactsTemplate, events);
-
 
 // Валидаторы
 events.on('checkout:contactsErrors', (errors: string[]) => {
@@ -86,7 +87,7 @@ events.on('cart:open', () => {
 // Удаление товара из корзины
 events.on('cart:itemRemove', (product: IProductItem) => {
   cartModel.deleteProduct(product);
-  cartView.updateCounter(cartModel.productsCount);
+  mainView.updateCounter(cartModel.productsCount);
   cartView.updateTotal(cartModel.total);
 
   const cartItems = cartModel.products.map((item, index) => {
@@ -114,14 +115,15 @@ events.on('order:open', () => {
 
 // Вывод списка товаров (рендер каталог)
 events.on('productList:updated', () => {
-  const gallery = ensureElement<HTMLElement>('.gallery');
-  gallery.innerHTML = '';
-  appModel.productList.forEach(item => {
-    const productView = new ProductView(cardCatalogTemplate, events, {
+  const productElements = appModel.productList.map((item) => {
+    const productView = new ProductView(productTemplate, events, {
       onClick: () => events.emit('product:select', item)
-    });
-    gallery.append(productView.render(item));
-  });
+    })
+
+    return productView.render(item)
+  })
+
+  mainView.setItems(productElements)
 });
 
 // Работа с выбранным продуктом
@@ -131,25 +133,27 @@ events.on('product:select', (item: IProductItem) => {
 
 events.on('productModal:open', (item: IProductItem) => {
   const productDetailsView = new ProductDetailsView(productDetailsTemplate, events);
-  modalView.setContent(productDetailsView.render(item, cartModel.products));
+  const inCart = cartModel.hasProduct(item);
+
+  modalView.setContent(productDetailsView.render(item, inCart));
   modalView.open();
 });
 
 // Работа с корзиной (добавление товара)
 events.on('product:addToCart', () => {
   cartModel.addProduct(appModel.activeProduct);
-  cartView.updateCounter(cartModel.productsCount);
+  mainView.updateCounter(cartModel.productsCount);
   modalView.close();
 });
 
 // Заказ и успешное завершение
 events.on('success:open', () => {
   apiModel.placeOrder(checkoutModel.orderData)
-    .then(() => {
+    .then((res) => {
       cartModel.clear();
-      cartView.updateCounter(cartModel.productsCount);
+      mainView.updateCounter(cartModel.productsCount);
       const successView = new SuccessView(successTemplate, events);
-      modalView.setContent(successView.render(checkoutModel.totalAmount));
+      modalView.setContent(successView.render(res.total));
       modalView.open();
     })
     .catch(error => console.error(error));
@@ -160,6 +164,15 @@ events.on('success:close', () => {
   contactsView.clear();
   modalView.close();
 });
+
+// Работа с модальными окнами
+events.on('modal:open', () => {
+  mainView.lock(true)
+})
+
+events.on('modal:close', () => {
+  mainView.lock(false)
+})
 
 // Стартовая загрузка каталога
 apiModel.getProductList()

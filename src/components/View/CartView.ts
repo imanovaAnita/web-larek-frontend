@@ -7,8 +7,7 @@ export class CartView {
   private itemListEl: HTMLElement;
   private checkoutBtn: HTMLButtonElement;
   private totalEl: HTMLElement;
-  private openCartBtn: HTMLButtonElement;
-  private cartCounterEl: HTMLElement;
+
 
   constructor(template: HTMLTemplateElement, protected events: IEvents) {
     const cartRoot = template.content.querySelector('.basket').cloneNode(true) as HTMLElement;
@@ -18,12 +17,7 @@ export class CartView {
     this.titleEl = cartRoot.querySelector('.modal__title');
     this.checkoutBtn = cartRoot.querySelector('.basket__button');
 
-    this.openCartBtn = document.querySelector('.header__basket');
-    this.cartCounterEl = document.querySelector('.header__basket-counter');
-
-    this.openCartBtn.addEventListener('click', () => { this.events.emit('cart:open') });
     this.checkoutBtn.addEventListener('click', () => { this.events.emit('order:open') });
-
     this.setItems([]);
   }
 
@@ -38,10 +32,6 @@ export class CartView {
     this.itemListEl.replaceChildren(
       createElement<HTMLParagraphElement>('p', { textContent: 'Корзина пуста' })
     );
-  }
-
-  updateCounter(count: number) {
-    this.cartCounterEl.textContent = String(count);
   }
 
   updateTotal(amount: number) {

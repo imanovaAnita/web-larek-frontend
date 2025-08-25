@@ -21,23 +21,14 @@ export class ModalView {
   /** открывает модальное окно */
   open() {
     this.modalContainer.classList.add('modal_active');
-    this.lock(true)
+    this.events.emit('modal:open')
   }
 
   /** Закрывает модальное окно */
   close() {
     this.setContent(null);
     this.modalContainer.classList.remove('modal_active');
-    this.lock(false)
-  }
-
-  lock(value: boolean) {
-    if (value) {
-      this.pageWrapper.classList.add('page__wrapper_locked');
-      return
-    }
-
-    this.pageWrapper.classList.remove('page__wrapper_locked');
+    this.events.emit('modal:close')
   }
 
   /** Устанавливает контент модального окна */

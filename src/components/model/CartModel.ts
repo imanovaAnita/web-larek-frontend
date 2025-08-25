@@ -36,6 +36,11 @@ export class CartModel {
         this._products = this._products.filter(item => item.id !== product.id);
     }
 
+    /** Проверяет есть ли продукт в корзине */
+    hasProduct(product: IProductItem): boolean {
+        return this._products.some(item => item.id === product.id);
+    }
+
     /** Очистить корзину */
     clear(): void {
         this._products = [];
